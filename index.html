@@ -1,0 +1,543 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keuangan V2</title>
+
+<style>
+:root{
+--bg:#0f1117;
+--card:#171923;
+--border:#262a38;
+--text:#f1f5ff;
+--muted:#8b93ad;
+--accent:#6d7dff;
+--green:#31d0aa;
+--red:#ff6b81;
+--radius:18px;
+}
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
+}
+
+body{
+background:
+radial-gradient(circle at top left, rgba(109,125,255,.18), transparent 30%),
+radial-gradient(circle at bottom right, rgba(49,208,170,.10), transparent 30%),
+var(--bg);
+color:var(--text);
+padding:24px;
+min-height:100vh;
+}
+
+.container{
+max-width:1200px;
+margin:auto;
+}
+
+.top{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:24px;
+gap:12px;
+flex-wrap:wrap;
+}
+
+h1{
+font-size:30px;
+}
+
+.period{
+padding:12px 18px;
+border-radius:14px;
+background:var(--card);
+border:1px solid var(--border);
+font-weight:600;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:16px;
+margin-bottom:24px;
+}
+
+.card{
+background:rgba(23,25,35,.85);
+border:1px solid var(--border);
+padding:20px;
+border-radius:var(--radius);
+backdrop-filter:blur(10px);
+box-shadow:0 10px 30px rgba(0,0,0,.18);
+}
+
+.label{
+font-size:13px;
+color:var(--muted);
+margin-bottom:8px;
+}
+
+.value{
+font-size:28px;
+font-weight:700;
+}
+
+.green{
+color:var(--green);
+}
+
+.red{
+color:var(--red);
+}
+
+.form{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:14px;
+margin-bottom:24px;
+}
+
+input,select{
+width:100%;
+padding:12px;
+border-radius:12px;
+border:1px solid var(--border);
+background:#11141d;
+color:white;
+}
+
+button{
+border:none;
+padding:12px 18px;
+border-radius:12px;
+background:linear-gradient(135deg,var(--accent),#8a68ff);
+color:white;
+font-weight:700;
+cursor:pointer;
+}
+
+button:hover{
+opacity:.9;
+}
+
+.table-wrap{
+overflow:auto;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:14px;
+text-align:left;
+border-bottom:1px solid var(--border);
+}
+
+th{
+color:var(--muted);
+font-size:13px;
+}
+
+.actions{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin-bottom:20px;
+}
+
+.period-list{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin-bottom:20px;
+}
+
+.period-btn{
+background:#11141d;
+border:1px solid var(--border);
+}
+
+.active-period{
+background:linear-gradient(135deg,var(--accent),#8a68ff);
+}
+
+@media(max-width:700px){
+body{
+padding:14px;
+}
+.value{
+font-size:22px;
+}
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="top">
+<div>
+<h1>💰 Keuangan V2</h1>
+<p style="color:var(--muted);margin-top:6px;">
+Periode otomatis 27 → 26
+</p>
+</div>
+
+<div class="period" id="periodeText"></div>
+</div>
+
+<div class="grid">
+
+<div class="card">
+<div class="label">Pemasukan</div>
+<div class="value green" id="income">Rp 0</div>
+</div>
+
+<div class="card">
+<div class="label">Pengeluaran</div>
+<div class="value red" id="expense">Rp 0</div>
+</div>
+
+<div class="card">
+<div class="label">Saldo</div>
+<div class="value" id="balance">Rp 0</div>
+</div>
+
+</div>
+
+<div class="card" style="margin-bottom:24px;">
+
+<h2 style="margin-bottom:18px;">Tambah Transaksi</h2>
+
+<div class="form">
+
+<input type="date" id="date">
+
+<select id="type">
+<option value="Masuk">Pemasukan</option>
+<option value="Keluar">Pengeluaran</option>
+</select>
+
+<input type="text" id="category" placeholder="Kategori">
+
+<input type="number" id="amount" placeholder="Nominal">
+
+<input type="text" id="note" placeholder="Catatan">
+
+<button onclick="addTransaction()">
+Tambah
+</button>
+
+</div>
+
+</div>
+
+<div class="actions">
+<button onclick="exportData()">Export Backup</button>
+<button onclick="resetData()" style="background:linear-gradient(135deg,#ff6b81,#ff3b5c)">
+Reset Data
+</button>
+</div>
+
+<h2 style="margin-bottom:14px;">📅 Histori Periode</h2>
+
+<div class="period-list" id="periodList"></div>
+
+<div class="card">
+
+<div class="table-wrap">
+
+<table>
+
+<thead>
+<tr>
+<th>Tanggal</th>
+<th>Jenis</th>
+<th>Kategori</th>
+<th>Catatan</th>
+<th>Nominal</th>
+<th></th>
+</tr>
+</thead>
+
+<tbody id="tbody"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const STORAGE_KEY = "keuangan_v2_multi_periode";
+
+let db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+
+function rupiah(num){
+return "Rp " + Number(num || 0).toLocaleString("id-ID");
+}
+
+function getPeriod(dateStr){
+
+const d = new Date(dateStr);
+
+let year = d.getFullYear();
+let month = d.getMonth();
+
+let startMonth;
+let startYear;
+
+let endMonth;
+let endYear;
+
+if(d.getDate() >= 27){
+
+startMonth = month;
+startYear = year;
+
+endMonth = month + 1;
+endYear = year;
+
+if(endMonth > 11){
+endMonth = 0;
+endYear++;
+}
+
+}else{
+
+startMonth = month - 1;
+startYear = year;
+
+if(startMonth < 0){
+startMonth = 11;
+startYear--;
+}
+
+endMonth = month;
+endYear = year;
+}
+
+const start = `27-${String(startMonth+1).padStart(2,"0")}-${startYear}`;
+const end = `26-${String(endMonth+1).padStart(2,"0")}-${endYear}`;
+
+return `${start} sampai ${end}`;
+
+}
+
+let currentPeriod = "";
+
+function addTransaction(){
+
+const date = document.getElementById("date").value;
+const type = document.getElementById("type").value;
+const category = document.getElementById("category").value;
+const amount = Number(document.getElementById("amount").value);
+const note = document.getElementById("note").value;
+
+if(!date || !amount){
+alert("Isi tanggal dan nominal");
+return;
+}
+
+const period = getPeriod(date);
+
+if(!db[period]){
+db[period] = [];
+}
+
+db[period].push({
+id:Date.now(),
+date,
+type,
+category,
+amount,
+note
+});
+
+localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+
+currentPeriod = period;
+
+render();
+clearForm();
+
+}
+
+function clearForm(){
+document.getElementById("category").value = "";
+document.getElementById("amount").value = "";
+document.getElementById("note").value = "";
+}
+
+function render(){
+
+const periods = Object.keys(db).sort().reverse();
+
+if(!currentPeriod){
+
+if(periods.length){
+currentPeriod = periods[0];
+}else{
+
+const today = new Date().toISOString().split("T")[0];
+currentPeriod = getPeriod(today);
+
+}
+
+}
+
+document.getElementById("periodeText").innerText = currentPeriod;
+
+renderPeriods();
+
+const data = db[currentPeriod] || [];
+
+let income = 0;
+let expense = 0;
+
+data.forEach(item=>{
+
+if(item.type === "Masuk"){
+income += item.amount;
+}else{
+expense += item.amount;
+}
+
+});
+
+document.getElementById("income").innerText = rupiah(income);
+document.getElementById("expense").innerText = rupiah(expense);
+document.getElementById("balance").innerText = rupiah(income - expense);
+
+const tbody = document.getElementById("tbody");
+
+tbody.innerHTML = "";
+
+if(!data.length){
+
+tbody.innerHTML = `
+<tr>
+<td colspan="6" style="text-align:center;color:gray;padding:40px;">
+Belum ada transaksi
+</td>
+</tr>
+`;
+
+return;
+
+}
+
+data.slice().reverse().forEach(item=>{
+
+tbody.innerHTML += `
+<tr>
+<td>${item.date}</td>
+<td>${item.type}</td>
+<td>${item.category}</td>
+<td>${item.note}</td>
+<td style="font-weight:700;color:${item.type==="Masuk" ? "#31d0aa" : "#ff6b81"}">
+${rupiah(item.amount)}
+</td>
+<td>
+<button onclick="removeTransaction(${item.id})"
+style="background:#ff4d6d;padding:8px 10px;">
+Hapus
+</button>
+</td>
+</tr>
+`;
+
+});
+
+}
+
+function removeTransaction(id){
+
+if(!confirm("Hapus transaksi?")) return;
+
+db[currentPeriod] = db[currentPeriod].filter(x=>x.id !== id);
+
+localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+
+render();
+
+}
+
+function renderPeriods(){
+
+const wrap = document.getElementById("periodList");
+
+wrap.innerHTML = "";
+
+Object.keys(db).sort().reverse().forEach(period=>{
+
+wrap.innerHTML += `
+<button
+class="period-btn ${period===currentPeriod ? "active-period" : ""}"
+onclick="switchPeriod('${period}')">
+${period}
+</button>
+`;
+
+});
+
+}
+
+function switchPeriod(period){
+
+currentPeriod = period;
+
+render();
+
+}
+
+function exportData(){
+
+const blob = new Blob(
+[JSON.stringify(db,null,2)],
+{type:"application/json"}
+);
+
+const a = document.createElement("a");
+
+a.href = URL.createObjectURL(blob);
+a.download = "backup-keuangan-v2.json";
+a.click();
+
+}
+
+function resetData(){
+
+if(confirm("Hapus semua data?")){
+
+localStorage.removeItem(STORAGE_KEY);
+
+db = {};
+
+currentPeriod = "";
+
+render();
+
+}
+
+}
+
+render();
+
+</script>
+
+</body>
+</html>
